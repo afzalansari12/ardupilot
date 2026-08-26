@@ -19,6 +19,8 @@ bool Sub::set_home_to_current_location(bool lock)
     Location temp_loc;
     if (ahrs.get_location(temp_loc)) {
 
+        update_surface_alt();
+
         // Make home always at the water's surface.
         // This allows disarming and arming again at depth.
         // This also ensures that mission items with relative altitude frame, are always
@@ -51,4 +53,48 @@ bool Sub::set_home(const Location& loc, bool lock)
 
     // return success
     return true;
+}
+
+void Sub::update_surface_alt()
+{
+    Location cur_loc;
+    if (ahrs.get_location(cur_loc)) {
+        cur_loc.offset_up_m(-barometer.get_altitude());
+        int32_t alt_cm;
+        if (cur_loc.get_alt_cm(Location::AltFrame::ABSOLUTE, alt_cm)) {
+            surface_alt_cm = alt_cm;
+            surface_alt_set = true;
+        }
+    }
+}
+
+bool Sub::get_surface_alt_cm(int32_t &alt_cm) const
+{
+    if (surface_alt_set) {
+        alt_cm = surface_alt_cm;
+        return true;
+    }
+    if (ahrs.home_is_set()) {
+        const Location &home_loc = ahrs.get_home();
+        return home_loc.get_alt_cm(Location::AltFrame::ABSOLUTE, alt_cm);
+    }
+    return false;
+}
+
+void Sub::set_surface_alt_cm(int32_t alt_cm)
+{
+    surface_alt_cm = alt_cm;
+    surface_alt_set = true;
+}
+
+bool Sub::get_surface_location(Location &loc) const
+{
+    if (ahrs.get_location(loc)) {
+        int32_t surf_alt;
+        if (get_surface_alt_cm(surf_alt)) {
+            loc.set_alt_cm(surf_alt, Location::AltFrame::ABSOLUTE);
+            return true;
+        }
+    }
+    return false;
 }

@@ -430,6 +430,12 @@ private:
     void update_home_from_EKF();
     bool set_home_to_current_location(bool lock) override WARN_IF_UNUSED;
     bool set_home(const Location& loc, bool lock) override WARN_IF_UNUSED;
+    bool get_surface_alt_cm(int32_t &alt_cm) const;
+    void set_surface_alt_cm(int32_t alt_cm);
+    bool get_surface_location(Location &loc) const;
+    void update_surface_alt();
+    int32_t surface_alt_cm;
+    bool surface_alt_set = false;
     float get_alt_rel() const WARN_IF_UNUSED;
     float get_alt_msl() const WARN_IF_UNUSED;
     void exit_mission();
